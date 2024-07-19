@@ -29,9 +29,6 @@ const gameboard = (function () {
 
 const playGame = () => {
     for (let i = 0; i < 9; i++) {
-        gameboard.printValues();
-
-
         const row = parseInt(prompt("Row: (1-3)")) - 1;
         const column = parseInt(prompt("Column: (1-3)")) - 1;
 
@@ -53,7 +50,7 @@ const playGame = () => {
             }
 
             gameboard.resetGame();
-            break;
+            return;
         }
     }
 
@@ -61,8 +58,88 @@ const playGame = () => {
     gameboard.resetGame();
 };
 
-const checkWin = () => {
+const checkRows = () => {
+    let marker = "";
+
+    if (gameboard.activePlayer % 2 === 0) {
+        marker = "X";
+    } else {
+        marker = "O";
+    }
+
+    for (let i = 0; i < 3; i++) {
+        let win = true;
+        for (let j = 0; j < 3; j++) {
+            if (gameboard.values[i][j] !== marker) {
+                win = false;
+                break;
+            }
+        }
+        if (win) {
+            return true;
+        }
+    }
+
     return false;
+};
+
+const checkColumns = () => {
+    let marker = "";
+
+    if (gameboard.activePlayer % 2 === 0) {
+        marker = "X";
+    } else {
+        marker = "O";
+    }
+
+    for (let i = 0; i < 3; i++) {
+        let win = true;
+        for (let j = 0; j < 3; j++) {
+            if (gameboard.values[j][i] !== marker) {
+                win = false;
+                break;
+            }
+        }
+        if (win) {
+            return true;
+        }
+    }
+
+    return false;
+};
+
+const checkDiagonals = () => {
+    let marker = "";
+
+    if (gameboard.activePlayer % 2 === 0) {
+        marker = "X";
+    } else {
+        marker = "O";
+    }
+
+    let win = true;
+    for (let i = 0; i < 3; i++) {
+        if (gameboard.values[i][i] !== marker) {
+            win = false;
+            break;
+        }
+    }
+    if (win) {
+        return true;
+    }
+
+    win = true;
+    for (let i = 0; i < 3; i++) {
+        if (gameboard.values[i][2 - i] !== marker) {
+            win = false;
+            break;
+        }
+    }
+    return win;
+};
+
+const checkWin = () => {
+    return checkRows() || checkColumns() || checkDiagonals();
 };
 
 playGame();
