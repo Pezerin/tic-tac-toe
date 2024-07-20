@@ -5,141 +5,191 @@ const gameboard = (function () {
         ["", "", ""]
     ];
 
-    const printValues = () => {
-        for (let i = 0; i < values.length; i++) {
-            console.log(values[i].join(" | "));
-        }
-        console.log("\n");
-    };
-
     let activePlayer = 1;
 
+    return { values, activePlayer };
+})();
+
+const game = (function () {
+    const handleMove = (row, col, cell) => {
+        if (gameboard.values[row][col] !== "" || displayController.winner.textContent !== "") {
+            return;
+        }
+    
+        if (gameboard.activePlayer % 2 !== 0) {
+            gameboard.values[row][col] = player1.marker;
+            cell.textContent = player1.marker;
+        } else {
+            gameboard.values[row][col] = player2.marker;
+            cell.textContent = player2.marker;
+        }
+    
+        gameboard.activePlayer++;
+        
+        if (checkWin()) {
+            if (gameboard.activePlayer % 2 === 0) {
+                displayController.winner.textContent = `${player1.name} wins!`;
+            } else {
+                displayController.winner.textContent = `${player2.name} wins!`;
+            }
+            return;
+        }
+    
+        if (checkTie()) {
+            displayController.winner.textContent = "Tie!";
+        }
+    };
+
+    const checkRows = () => {
+        let marker = "";
+    
+        if (gameboard.activePlayer % 2 === 0) {
+            marker = "X";
+        } else {
+            marker = "O";
+        }
+    
+        for (let i = 0; i < 3; i++) {
+            let win = true;
+            for (let j = 0; j < 3; j++) {
+                if (gameboard.values[i][j] !== marker) {
+                    win = false;
+                    break;
+                }
+            }
+            if (win) {
+                return true;
+            }
+        }
+    
+        return false;
+    };
+    
+    const checkColumns = () => {
+        let marker = "";
+    
+        if (gameboard.activePlayer % 2 === 0) {
+            marker = "X";
+        } else {
+            marker = "O";
+        }
+    
+        for (let i = 0; i < 3; i++) {
+            let win = true;
+            for (let j = 0; j < 3; j++) {
+                if (gameboard.values[j][i] !== marker) {
+                    win = false;
+                    break;
+                }
+            }
+            if (win) {
+                return true;
+            }
+        }
+    
+        return false;
+    };
+    
+    const checkDiagonals = () => {
+        let marker = "";
+    
+        if (gameboard.activePlayer % 2 === 0) {
+            marker = "X";
+        } else {
+            marker = "O";
+        }
+    
+        let win = true;
+        for (let i = 0; i < 3; i++) {
+            if (gameboard.values[i][i] !== marker) {
+                win = false;
+                break;
+            }
+        }
+        if (win) {
+            return true;
+        }
+    
+        win = true;
+        for (let i = 0; i < 3; i++) {
+            if (gameboard.values[i][2 - i] !== marker) {
+                win = false;
+                break;
+            }
+        }
+        return win;
+    };
+    
+    const checkWin = () => {
+        return checkRows() || checkColumns() || checkDiagonals();
+    };
+    
+    const checkTie = () => {
+        return displayController.cells.every(cell => cell.textContent !== "");
+    };
+
     const resetGame = () => {
-        values = [
+        gameboard.values = [
             ["", "", ""],
             ["", "", ""],
             ["", "", ""]
         ];
     
-        activePlayer = 1;
+        gameboard.activePlayer = 1;
+
+        displayController.cells.forEach(cell => {
+            cell.textContent = "";
+        });
+
+        displayController.winner.textContent = "";
     };
 
-    return { values, printValues, activePlayer, resetGame };
+    return { handleMove, checkWin, checkTie, resetGame };
 })();
 
-const playGame = () => {
-    for (let i = 0; i < 9; i++) {
-        const row = parseInt(prompt("Row: (1-3)")) - 1;
-        const column = parseInt(prompt("Column: (1-3)")) - 1;
+const displayController = (function () {
+    const cells = Array.from(document.querySelectorAll(".cell"));
+    const reset = document.querySelector("button");
+    const winner = document.querySelector("#winner");
 
-        if (gameboard.activePlayer % 2 !== 0) {
-            gameboard.values[row][column] = "X";
-            gameboard.activePlayer++;
-        } else {
-            gameboard.values[row][column] = "O";
-            gameboard.activePlayer++;
-        }
+    reset.addEventListener("click", () => {
+        game.resetGame();
+    });
 
-        gameboard.printValues();
-        
-        if (checkWin()) {
-            if (gameboard.activePlayer % 2 === 0) {
-                console.log("Player 1 wins!");
-            } else {
-                console.log("Player 2 wins");
-            }
+    cells.forEach(cell => {
+        cell.addEventListener("click", () => {
+            const row = parseInt(cell.id.charAt(0));
+            const col = parseInt(cell.id.charAt(1));
+            game.handleMove(row, col, cell);
+        });
+    });
 
-            gameboard.resetGame();
-            return;
-        }
-    }
+    return { cells, reset, winner };
+})();
 
-    console.log("Tie!");
-    gameboard.resetGame();
-};
-
-const checkRows = () => {
+function createPlayer(name, number) {
     let marker = "";
 
-    if (gameboard.activePlayer % 2 === 0) {
+    if (number === 1) {
         marker = "X";
     } else {
         marker = "O";
     }
 
-    for (let i = 0; i < 3; i++) {
-        let win = true;
-        for (let j = 0; j < 3; j++) {
-            if (gameboard.values[i][j] !== marker) {
-                win = false;
-                break;
-            }
-        }
-        if (win) {
-            return true;
-        }
-    }
+    const playerDisplays = Array.from(document.querySelectorAll(".player"));
 
-    return false;
-};
+    const updateName = () => {
+        playerDisplays[number - 1].textContent = `${number}: ${name}`;
+    };
 
-const checkColumns = () => {
-    let marker = "";
+    return { name, marker, playerDisplays, updateName };
+}
 
-    if (gameboard.activePlayer % 2 === 0) {
-        marker = "X";
-    } else {
-        marker = "O";
-    }
+name1 = prompt("Player 1: ");
+name2 = prompt("Player 2: ");
 
-    for (let i = 0; i < 3; i++) {
-        let win = true;
-        for (let j = 0; j < 3; j++) {
-            if (gameboard.values[j][i] !== marker) {
-                win = false;
-                break;
-            }
-        }
-        if (win) {
-            return true;
-        }
-    }
+player1 = createPlayer(name1, 1);
+player2 = createPlayer(name2, 2);
 
-    return false;
-};
-
-const checkDiagonals = () => {
-    let marker = "";
-
-    if (gameboard.activePlayer % 2 === 0) {
-        marker = "X";
-    } else {
-        marker = "O";
-    }
-
-    let win = true;
-    for (let i = 0; i < 3; i++) {
-        if (gameboard.values[i][i] !== marker) {
-            win = false;
-            break;
-        }
-    }
-    if (win) {
-        return true;
-    }
-
-    win = true;
-    for (let i = 0; i < 3; i++) {
-        if (gameboard.values[i][2 - i] !== marker) {
-            win = false;
-            break;
-        }
-    }
-    return win;
-};
-
-const checkWin = () => {
-    return checkRows() || checkColumns() || checkDiagonals();
-};
-
-playGame();
+player1.updateName();
+player2.updateName();
